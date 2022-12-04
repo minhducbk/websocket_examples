@@ -1,0 +1,11 @@
+@startuml PriceStreaming
+  participant "Clients(FE,...)" as clients
+  participant "Storage(DynamoDB, S3)" as storage
+  participant "Hub" as hub
+  participant "Price Source(Deribit, Binance)" as source
+
+  hub -> source: send WS request
+  source --> hub: establish WS connection
+  source -> hub: send continuosly latest price via WS connection
+@enduml
+
