@@ -1,4 +1,4 @@
-name: WS examples - CI
+name: WS examples - run unit tests CI
 on:
   push:
     branches:

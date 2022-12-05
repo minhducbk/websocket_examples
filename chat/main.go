@@ -12,7 +12,7 @@ import (
 	"github.com/minhducbk/websocket_examples/chat/services"
 )
 
-var addr = flag.String("addr", ":8084", "http service address")
+var addr = flag.String("addr", ":8086", "http service address")
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
