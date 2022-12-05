@@ -1,19 +1,18 @@
-name: Hako riskengine - CI
+name: WS examples - run unit tests CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   test_and_static_analysis:
-    name: Unit tests and SonarCloud
-    runs-on: self-hosted
+    name: Unit tests
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.9
           go-version-file: 'go.mod'
           cache-dependency-path: 'go.sum'
           cache: true
