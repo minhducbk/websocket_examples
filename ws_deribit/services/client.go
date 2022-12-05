@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/frankrap/deribit-api/models"
 	"github.com/gorilla/websocket"
 	"github.com/minhducbk/websocket_examples/ws_deribit/deribit"
 )
@@ -124,7 +125,7 @@ func (c *Client) writePump() {
 }
 
 // ServeWs handles websocket requests from the peer.
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, deribitClient *deribit.DeribitClient) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, inputChannels map[string]chan *models.Trade) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
@@ -137,8 +138,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, deribitClient *de
 	// new goroutines.
 	// go client.writePump()
 	go client.readPump()
-	go client.writePriceAndMessage(deribitClient)
-	go deribitClient.FlushPricesIntoChannelCmd()
+	go client.writePriceAndMessage(inputChannels)
 }
 
 // writePump pumps messages from the hub to the websocket connection.
@@ -146,7 +146,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, deribitClient *de
 // A goroutine running writePump is started for each connection. The
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
-func (c *Client) writePriceAndMessage(deribitClient *deribit.DeribitClient) {
+func (c *Client) writePriceAndMessage(currencyToSellTrade map[string]chan *models.Trade) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -178,7 +178,7 @@ func (c *Client) writePriceAndMessage(deribitClient *deribit.DeribitClient) {
 			if err := w.Close(); err != nil {
 				return
 			}
-		case trade, ok := <-deribitClient.SellBTCTrades:
+		case trade, ok := <-currencyToSellTrade[deribit.BTC]:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
@@ -211,4 +211,3 @@ func (c *Client) writePriceAndMessage(deribitClient *deribit.DeribitClient) {
 		}
 	}
 }
-

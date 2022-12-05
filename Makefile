@@ -5,13 +5,14 @@ WORK_DIR=.
 .PHONY: test
 ## Run all unit tests
 test:
-	${GO} test $(shell ${GO} list ./... | grep -v test/) -coverprofile coverage.out
+	${GO} test `${GO} list ./...` -coverprofile coverage.out
 
 .PHONY: build
 ## Build all binaries
 build:
 	mkdir -p bin/
 	${GO} build -o bin/chat chat/main.go 
+	${GO} build -o bin/ws_deribit ws_deribit/main.go 
 
 .PHONY: chat
 ## Run chat

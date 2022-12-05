@@ -11,15 +11,12 @@ import (
 
 type DeribitClient struct {
 	*deribit.Client
-	SellBTCTrades chan *models.Trade
+	Result        *IntermediateChannel
 }
 
 var BTC = "BTC"
 
 func (client *DeribitClient) FlushPricesIntoChannelCmd() {
-
-	// create the input channel
-	inputStocks := make(chan *models.Trade)
 
 	// producer: read from websocket and send to channel
 	go func() {
@@ -29,18 +26,18 @@ func (client *DeribitClient) FlushPricesIntoChannelCmd() {
 			if err != nil {
 				break
 			}
-			inputStocks <- trade
+			client.Result.InputStocks <- trade
 		}
-		close(inputStocks)
+		close(client.Result.InputStocks)
 	}()
 	// filter one kind of coin
 	go func() {
-		for trade := range inputStocks {
+		for trade := range client.Result.InputStocks {
 			if trade.Direction == "sell" {
-				client.SellBTCTrades <- trade
+				client.Result.CurrencyToSellTrade[BTC] <- trade
 			}
 		}
-		close(client.SellBTCTrades)
+		close(client.Result.CurrencyToSellTrade[BTC])
 	}()
 
 	// print the trades
@@ -61,10 +58,15 @@ func SetupClient() *DeribitClient {
 
 	client.GetTime()
 	client.Test()
-	return &DeribitClient{
+	result := &DeribitClient{
 		Client: client,
-		SellBTCTrades: make(chan *models.Trade),
+		Result: &IntermediateChannel{
+			InputStocks:         make(chan *models.Trade),
+			CurrencyToSellTrade: make(map[string]chan *models.Trade),
+		},
 	}
+	result.Result.CurrencyToSellTrade[BTC] = make(chan *models.Trade)
+	return result
 }
 
 func (client *DeribitClient) SubscribeCmd() error {
