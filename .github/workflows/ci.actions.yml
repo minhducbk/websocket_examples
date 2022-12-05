@@ -1,13 +1,13 @@
-name: Hako riskengine - CI
+name: WS examples - CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
   test_and_static_analysis:
-    name: Unit tests and SonarCloud
+    name: Unit tests
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
