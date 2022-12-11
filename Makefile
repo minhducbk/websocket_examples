@@ -29,7 +29,7 @@ ws_coinbase:
 ws_coincap:
 	${GO} run ws_coincap/*.go 
 
-.PHONY: ws_deribit
+.PHONY: ws
 ## Run chat
-ws_deribit:
-	${GO} run ws_deribit/*.go 
+ws:
+	${GO} run ws/*.go 
