@@ -12,7 +12,7 @@ test:
 build:
 	mkdir -p bin/
 	${GO} build -o bin/chat chat/main.go 
-	${GO} build -o bin/ws_deribit ws_deribit/main.go 
+	${GO} build -o bin/ws ws/main.go 
 
 .PHONY: chat
 ## Run chat

@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocker-examples-deployment
+  labels:
+    app: websocker-examples
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: websocker-examples
+  template:
+    metadata:
+      labels:
+        app: websocker-examples
+    spec:
+      containers:
+      - name: websocker-examples
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
