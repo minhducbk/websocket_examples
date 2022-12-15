@@ -12,7 +12,7 @@ test:
 build:
 	mkdir -p bin/
 	${GO} build -o bin/chat chat/main.go 
-	${GO} build -o bin/ws_deribit ws_deribit/main.go 
+	${GO} build -o bin/ws ws/main.go 
 
 .PHONY: chat
 ## Run chat
@@ -29,7 +29,7 @@ ws_coinbase:
 ws_coincap:
 	${GO} run ws_coincap/*.go 
 
-.PHONY: ws_deribit
+.PHONY: ws
 ## Run chat
-ws_deribit:
-	${GO} run ws_deribit/*.go 
+ws:
+	${GO} run ws/*.go 

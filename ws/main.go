@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/minhducbk/websocket_examples/ws_deribit/deribit"
-	"github.com/minhducbk/websocket_examples/ws_deribit/services"
+	"github.com/minhducbk/websocket_examples/ws/binance"
+	"github.com/minhducbk/websocket_examples/ws/services"
 )
 
 var addr = flag.String("addr", ":8084", "http service address")
@@ -29,12 +29,14 @@ func main() {
 	hub := services.NewHub()
 	go hub.Run()
 
-	deribitClient := deribit.SetupClient()
-	go deribitClient.FlushPricesIntoChannelCmd()
+	// deribitClient := deribit.SetupClient()
+	// deribitClient.SubscribeCmd()
+	// go deribitClient.FlushPricesIntoChannelCmd()
+	middleChan := binance.ShowBinancePrice("ETH-221216-1150-C")
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		services.ServeWs(hub, w, r, deribitClient.Result.CurrencyToSellTrade)
+		services.ServeWs(hub, w, r, middleChan)
 	})
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {

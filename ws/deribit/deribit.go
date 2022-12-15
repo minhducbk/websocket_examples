@@ -5,13 +5,25 @@ import (
 	"log"
 	"time"
 
-	"github.com/frankrap/deribit-api"
+	api "github.com/frankrap/deribit-api"
 	"github.com/frankrap/deribit-api/models"
 )
 
+type IntermediateChannel struct {
+	InputStocks         chan *models.BookSummary
+	CurrencyToSellTrade map[string]chan *models.BookSummary
+}
+
+func Message(book models.BookSummary) string {
+	return fmt.Sprintf("Product provide at %s expiry at xxx for %s: %v\n",
+		time.UnixMilli(book.CreationTimestamp),
+		book.InstrumentName,
+		book.BidPrice)
+}
+
 type DeribitClient struct {
-	*deribit.Client
-	Result        *IntermediateChannel
+	*api.Client
+	Result *IntermediateChannel
 }
 
 var BTC = "BTC"
@@ -33,9 +45,7 @@ func (client *DeribitClient) FlushPricesIntoChannelCmd() {
 	// filter one kind of coin
 	go func() {
 		for trade := range client.Result.InputStocks {
-			if trade.Direction == "sell" {
-				client.Result.CurrencyToSellTrade[BTC] <- trade
-			}
+			client.Result.CurrencyToSellTrade[BTC] <- trade
 		}
 		close(client.Result.CurrencyToSellTrade[BTC])
 	}()
@@ -47,25 +57,25 @@ func (client *DeribitClient) FlushPricesIntoChannelCmd() {
 	// }
 }
 func SetupClient() *DeribitClient {
-	cfg := &deribit.Configuration{
-		Addr:          deribit.TestBaseURL,
+	cfg := &api.Configuration{
+		Addr:          api.TestBaseURL,
 		ApiKey:        "AsJTU16U",
 		SecretKey:     "mM5_K8LVxztN6TjjYpv_cJVGQBvk4jglrEpqkw1b87U",
 		AutoReconnect: true,
 		DebugMode:     true,
 	}
-	client := deribit.New(cfg)
+	client := api.New(cfg)
 
 	client.GetTime()
 	client.Test()
 	result := &DeribitClient{
 		Client: client,
 		Result: &IntermediateChannel{
-			InputStocks:         make(chan *models.Trade),
-			CurrencyToSellTrade: make(map[string]chan *models.Trade),
+			InputStocks:         make(chan *models.BookSummary),
+			CurrencyToSellTrade: make(map[string]chan *models.BookSummary),
 		},
 	}
-	result.Result.CurrencyToSellTrade[BTC] = make(chan *models.Trade)
+	result.Result.CurrencyToSellTrade[BTC] = make(chan *models.BookSummary)
 	return result
 }
 
@@ -78,10 +88,10 @@ func (client *DeribitClient) SubscribeCmd() error {
 
 	})
 	client.On("book.BTC-PERPETUAL.100ms", func(e *models.OrderBookNotification) {
-
+		fmt.Println("Order book ", e)
 	})
 	client.On("book.BTC-PERPETUAL.raw", func(e *models.OrderBookRawNotification) {
-
+		fmt.Println("Order book raw ", e)
 	})
 	client.On("deribit_price_index.btc_usd", func(e *models.DeribitPriceIndexNotification) {
 
@@ -142,10 +152,10 @@ func (client *DeribitClient) SubscribeCmd() error {
 		//"perpetual.BTC-PERPETUAL.raw",
 		//"quote.BTC-PERPETUAL",
 		//"ticker.BTC-PERPETUAL.raw",
-		"trades.BTC-PERPETUAL.raw",
+		// "trades.BTC-PERPETUAL.raw",
 		//"user.changes.BTC-PERPETUAL.raw",
 		//"user.changes.future.BTC.raw",
-		"user.orders.BTC-PERPETUAL.raw",
+		// "user.orders.BTC-PERPETUAL.raw",
 		//"user.orders.future.BTC.100ms",
 		//"user.portfolio.btc",
 		//"user.trades.BTC-PERPETUAL.raw",
@@ -155,30 +165,29 @@ func (client *DeribitClient) SubscribeCmd() error {
 	return nil
 }
 
-func (client *DeribitClient) ReadLastTradeCmd(currency string) (*models.Trade, error) {
+func (client *DeribitClient) ReadLastTradeCmd(currency string) (*models.BookSummary, error) {
 	if currency == "" {
 		currency = BTC
 	}
-	getLastTradesResponse, err := client.GetLastTradesByCurrency(&models.GetLastTradesByCurrencyParams{
+	getBookSummaryByCurrency, err := client.GetBookSummaryByCurrency(&models.GetBookSummaryByCurrencyParams{
 		Currency: currency,
-		Count:    1,
 	})
 	if err != nil {
 		log.Printf("Error %v", err)
 		return nil, err
 	}
-	lastTrade := getLastTradesResponse.Trades[0]
-	fmt.Printf("Last price at %s for %s: %v\n",
-		time.UnixMilli(lastTrade.Timestamp),
-		lastTrade.InstrumentName,
-		lastTrade.Price)
-	return &lastTrade, nil
+	book := &getBookSummaryByCurrency[0]
+	fmt.Printf("Product provide at %s expiry at xxx for %s: %v\n",
+		time.UnixMilli(book.CreationTimestamp),
+		book.InstrumentName,
+		book.BidPrice)
+	return book, nil
 }
 
-func (client *DeribitClient) GetBookSummaryByCurrencyCmd() error {
+func (client *DeribitClient) GetBookSummaryByCurrencyCmd(currency string) error {
 	// GetBookSummaryByCurrency
 	getBookSummaryByCurrencyParams := &models.GetBookSummaryByCurrencyParams{
-		Currency: "BTC",
+		Currency: currency,
 		Kind:     "future",
 	}
 	var getBookSummaryByCurrencyResult []models.BookSummary
@@ -187,7 +196,50 @@ func (client *DeribitClient) GetBookSummaryByCurrencyCmd() error {
 		log.Printf("Error %v", err)
 		return err
 	}
+	for _, bookSummary := range getBookSummaryByCurrencyResult {
+		fmt.Printf("summary: %v \n", bookSummary)
+	}
 	log.Printf("getBookSummaryByCurrencyResult %v", getBookSummaryByCurrencyResult)
+	return nil
+}
+
+func (client *DeribitClient) GetBookSummaryByInstrumentCmd(instrument string) error {
+	if instrument == "" { 
+		instrument = "BTC-16DEC22-14000-P"
+	}
+	// GetBookSummaryByInstrument
+	getBookSummaryByInstrumentParams := &models.GetBookSummaryByInstrumentParams{
+		InstrumentName: instrument,
+	}
+	var getBookSummaryByInstrumentResult []models.BookSummary
+	getBookSummaryByInstrumentResult, err := client.GetBookSummaryByInstrument(getBookSummaryByInstrumentParams)
+	if err != nil {
+		log.Printf("Error %v", err)
+		return err
+	}
+	for _, bookSummary := range getBookSummaryByInstrumentResult {
+		fmt.Printf("summary: %v \n", bookSummary)
+	}
+	log.Printf("getBookSummaryByInstrumentResult %v", getBookSummaryByInstrumentResult)
+	return nil
+}
+
+func (client *DeribitClient) GetInstrumentsCmd(currency string) error {
+	// GetInstruments
+	getInstrumentsParams := &models.GetInstrumentsParams{
+		Currency: currency,
+		Kind:     "option",
+	}
+	var getInstruments []models.Instrument
+	getInstruments, err := client.GetInstruments(getInstrumentsParams)
+	if err != nil {
+		log.Printf("Error %v", err)
+		return err
+	}
+	for _, getInstrument := range getInstruments {
+		fmt.Printf("getInstrument: %v \n", getInstrument)
+	}
+	log.Printf("getInstruments %v", getInstruments)
 	return nil
 }
 
