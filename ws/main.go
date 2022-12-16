@@ -32,7 +32,8 @@ func main() {
 	// deribitClient := deribit.SetupClient()
 	// deribitClient.SubscribeCmd()
 	// go deribitClient.FlushPricesIntoChannelCmd()
-	middleChan := binance.ShowBinancePrice("ETH-221216-1150-C")
+	// wss://nbstream.binance.com/eoptions/ws/ETH-230127-1300-C@ticker
+	middleChan := binance.ShowBinancePrice("ETH-230127-1300-C")
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
