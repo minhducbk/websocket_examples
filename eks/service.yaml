@@ -4,7 +4,7 @@ metadata:
   name: websocket-examples-service
 spec:
   selector:
-    app.kubernetes.io/name: websocket-examples
+    app: websocket-examples
   ports:
     - protocol: TCP
       port: 80

@@ -6,7 +6,6 @@ package services
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -189,7 +188,7 @@ func (c *Client) writePriceAndMessage(midChan chan []byte) {
 				return
 			}
 			w.Write(bytes)
-			fmt.Println("Read Message from Hub WS connection: ", string(bytes))
+			log.Println("Read Message from Hub WS connection: ", string(bytes))
 			// Add queued chat messages to the current websocket message.
 			n := len(c.send)
 			for i := 0; i < n; i++ {
