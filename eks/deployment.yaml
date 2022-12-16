@@ -18,4 +18,4 @@ spec:
       - name: websocket-examples
         image: 234983257537.dkr.ecr.ap-southeast-1.amazonaws.com/websocket_examples:41ab6b22432b59dff94eb3c5d90e93408dfd80c9
         ports:
-        - containerPort: 8080
+        - containerPort: 8084
