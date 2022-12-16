@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: websocker-examples-deployment
+  name: websocket-examples-deployment
   labels:
-    app: websocker-examples
+    app: websocket-examples
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: websocker-examples
+      app: websocket-examples
   template:
     metadata:
       labels:
-        app: websocker-examples
+        app: websocket-examples
     spec:
       containers:
-      - name: websocker-examples
-        image: nginx:1.14.2
+      - name: websocket-examples
+        image: 234983257537.dkr.ecr.ap-southeast-1.amazonaws.com/websocket_examples:41ab6b22432b59dff94eb3c5d90e93408dfd80c9
         ports:
-        - containerPort: 80
+        - containerPort: 8080
