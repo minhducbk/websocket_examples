@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-examples-service
+spec:
+  selector:
+    app.kubernetes.io/name: websocket-examples
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8084
+  type: LoadBalancer

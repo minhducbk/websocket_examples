@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: websocket-examples
-        image: 234983257537.dkr.ecr.ap-southeast-1.amazonaws.com/websocket_examples:41ab6b22432b59dff94eb3c5d90e93408dfd80c9
+        image: 234983257537.dkr.ecr.ap-southeast-1.amazonaws.com/websocket_examples:3193f699366b8fc567b9066b977c4d2427332e5d
         ports:
         - containerPort: 8084
