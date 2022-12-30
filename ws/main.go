@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
+	"math/rand"
 	"net/http"
+	_ "net/http/pprof"
+	"time"
 
 	"github.com/minhducbk/websocket_examples/ws/binance"
 	"github.com/minhducbk/websocket_examples/ws/services"
@@ -39,8 +43,30 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		services.ServeWs(hub, w, r, middleChan)
 	})
+	http.HandleFunc("/log", logHandler)
 	err := http.ListenAndServe(*addr, nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
+	}
+}
+
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	ch := make(chan int)
+	go func() {
+		obj := make(map[string]float64)
+		if err := json.NewDecoder(r.Body).Decode(&obj); err != nil {
+			ch <- http.StatusBadRequest
+			return
+		}
+		// simulation of a time consuming process like writing logs into db
+		time.Sleep(time.Duration(rand.Intn(400)) * time.Millisecond)
+		ch <- http.StatusOK
+	}()
+
+	select {
+	case status := <-ch:
+		w.WriteHeader(status)
+	case <-time.After(200 * time.Millisecond):
+		w.WriteHeader(http.StatusRequestTimeout)
 	}
 }
