@@ -1,0 +1,23 @@
+config:
+  target: "ws://localhost:8084/ws"
+  tls:
+    # Can useful for testing, should not be used in production:
+    rejectUnauthorized: false
+  ensure:
+    maxErrorRate: 1
+  phases:
+    - duration: 60
+      # arrivalCount: 1000 # Fixed number of arrivals per second
+      # arrivalRate: 5 # generates 5 virtual users every second for 60 seconds
+      rampTo: 1000 # the arrival rate of virtual users from 5 to 1000
+      name: "Warming up"
+    # - duration: 60
+    #   arrivalRate: 10
+    #   rampTo: 100
+    #   name: "Max load"
+
+scenarios:
+  - engine: ws
+    name: Echo a string
+    flow:
+      - connect: "{{ target }}"

@@ -25,7 +25,7 @@ func main() {
 	// websocket source
 	c, _, err := websocket.DefaultDialer.Dial("wss://ws.coincap.io/trades/binance", nil)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Printf("Error: ws_coincap %v\n", err)
 		return
 	}
 	if err != nil {
